@@ -1,0 +1,44 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+    <div class="alert alert-info" role="alert">
+<pre>test_message_from_view = {{ test_message_from_view|default:"(brak w kontekście)" }}</pre>
+    </div>
+    <div id="MY-MARKER">XYZ</div>
+
+    <a href="{% url 'device_list' %}" class="btn btn-secondary mb-3">Powrót do listy DUPY</a>
+    <h2>Lista urządzeń</h2>
+    <div class="mb-3">
+        <a href="{% url 'device_add' %}" class="btn btn-primary btn-sm ms-2">Dodaj urządzenie</a>
+        <a href="{% url 'device_stats_page' %}" class="btn btn-info btn-sm ms-2">Statystyki</a>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nazwa</th>
+                <th>Typ</th>
+                <th>Numer inwentarzowy</th>
+                <th>Status</th>
+                <th>Przypisany użytkownik</th>
+                <th>Opcje</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for device in devices %}
+            <tr>
+                <td>{{ device.name }}</td>
+                <td>{{ device.get_device_type_display }}</td>
+                <td>{{ device.inventory_number }}</td>
+                <td>{{ device.get_status_display }}</td>
+                <td>{{ device.assigned_user }}</td>
+                <td>
+                    <a href="{% url 'device_edit' device.pk %}" class="btn btn-sm btn-warning">Edytuj</a>
+                    <a href="{% url 'device_delete' device.pk %}" class="btn btn-sm btn-danger">Usuń</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}

@@ -1,0 +1,115 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Device
+from .forms import DeviceForm
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login
+from django.contrib.auth.forms import UserCreationForm
+import io
+from django.http import HttpResponse
+from .models import Device
+import matplotlib.pyplot as plt
+from django.core.paginator import Paginator
+
+# w pliku core/views.py
+
+@login_required
+def device_list(request):
+    # Nasz "znacznik" do udowodnienia, że ten kod się uruchamia.
+    # Używam aktualnej daty i godziny, żeby był unikalny.
+    test_message = "Test z 17 czerwca, godz. 15:10"
+
+    # Prosta logika: pobierz wszystkie urządzenia
+    all_devices = Device.objects.all().order_by('id')
+
+    context = {
+        'devices': all_devices,
+        'test_message_from_view': test_message,
+    }
+    return render(request, 'core/device_list.html', context)
+
+@login_required
+def device_add(request):
+    if request.method == 'POST':
+        form = DeviceForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('device_list')
+    else:
+        form = DeviceForm()
+    return render(request, 'core/device_form.html', {'form': form})
+
+def register(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)  # automatyczne zalogowanie po rejestracji
+            return redirect('device_list')
+    else:
+        form = UserCreationForm()
+    return render(request, "core/register.html", {"form": form})
+
+@login_required
+def device_stats(request):
+    # Liczba urządzeń wg typu
+    device_types = dict(Device.DEVICE_TYPES)
+    stats = {k: 0 for k in device_types.keys()}
+    for dev in Device.objects.all():
+        stats[dev.device_type] += 1
+
+    types = [device_types[k] for k in stats.keys()]
+    counts = list(stats.values())
+
+    # Tworzymy wykres
+    fig, ax = plt.subplots()
+    ax.bar(types, counts)
+    ax.set_ylabel('Liczba urządzeń')
+    ax.set_title('Urządzenia wg typu')
+
+    buf = io.BytesIO()
+    plt.tight_layout()
+    plt.savefig(buf, format='png')
+    plt.close(fig)
+    buf.seek(0)
+    return HttpResponse(buf.getvalue(), content_type='image/png')
+
+# Widok HTML z osadzeniem wykresu:
+@login_required
+def device_stats_page(request):
+    return render(request, 'core/device_stats.html')
+
+@login_required
+def device_list(request):
+    devices = Device.objects.all()
+    return render(request, 'core/device_list.html', {'devices': devices})
+
+@login_required
+def device_add(request):
+    if request.method == 'POST':
+        form = DeviceForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('device_list')
+    else:
+        form = DeviceForm()
+    return render(request, 'core/device_form.html', {'form': form})
+
+@login_required
+def device_edit(request, pk):
+    device = get_object_or_404(Device, pk=pk)
+    if request.method == 'POST':
+        form = DeviceForm(request.POST, instance=device)
+        if form.is_valid():
+            form.save()
+            return redirect('device_list')
+    else:
+        form = DeviceForm(instance=device)
+    return render(request, 'core/device_form.html', {'form': form})
+
+@login_required
+def device_delete(request, pk):
+    device = get_object_or_404(Device, pk=pk)
+    if request.method == 'POST':
+        device.delete()
+        return redirect('device_list')
+    return render(request, 'core/device_confirm_delete.html', {'device': device})

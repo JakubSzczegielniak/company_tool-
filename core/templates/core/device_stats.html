@@ -1,0 +1,7 @@
+{% extends "core/base.html" %}
+{% block title %}Statystyki urządzeń{% endblock %}
+{% block content %}
+    <h2>Statystyki urządzeń wg typu</h2>
+    <img src="{% url 'device_stats' %}" alt="Wykres urządzeń" class="img-fluid" style="max-width:600px;">
+    <a href="{% url 'device_list' %}" class="btn btn-secondary mt-3">Powrót do listy</a>
+{% endblock %}
