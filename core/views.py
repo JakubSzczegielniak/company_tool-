@@ -14,18 +14,22 @@ from django.core.paginator import Paginator
 
 @login_required
 def device_list(request):
+    """Display a paginated list of devices."""
     # Nasz "znacznik" do udowodnienia, że ten kod się uruchamia.
     # Używam aktualnej daty i godziny, żeby był unikalny.
     test_message = "Test z 17 czerwca, godz. 15:10"
 
-    # Prosta logika: pobierz wszystkie urządzenia
-    all_devices = Device.objects.all().order_by('id')
+    all_devices = Device.objects.all().order_by("id")
+    paginator = Paginator(all_devices, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
 
     context = {
-        'devices': all_devices,
-        'test_message_from_view': test_message,
+        "devices": page_obj,
+        "page_obj": page_obj,
+        "test_message_from_view": test_message,
     }
-    return render(request, 'core/device_list.html', context)
+    return render(request, "core/device_list.html", context)
 
 @login_required
 def device_add(request):
@@ -78,21 +82,6 @@ def device_stats(request):
 def device_stats_page(request):
     return render(request, 'core/device_stats.html')
 
-@login_required
-def device_list(request):
-    devices = Device.objects.all()
-    return render(request, 'core/device_list.html', {'devices': devices})
-
-@login_required
-def device_add(request):
-    if request.method == 'POST':
-        form = DeviceForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('device_list')
-    else:
-        form = DeviceForm()
-    return render(request, 'core/device_form.html', {'form': form})
 
 @login_required
 def device_edit(request, pk):
