@@ -10,22 +10,30 @@ from .models import Device
 import matplotlib.pyplot as plt
 from django.core.paginator import Paginator
 
-# w pliku core/views.py
+# Views
 
 @login_required
 def device_list(request):
-    # Nasz "znacznik" do udowodnienia, że ten kod się uruchamia.
-    # Używam aktualnej daty i godziny, żeby był unikalny.
-    test_message = "Test z 17 czerwca, godz. 15:10"
+    """Display the device list with optional pagination."""
 
-    # Prosta logika: pobierz wszystkie urządzenia
-    all_devices = Device.objects.all().order_by('id')
+    all_devices = Device.objects.all().order_by("id")
+    show_all = request.GET.get("all") == "1"
+
+    if show_all:
+        devices = all_devices
+        page_obj = None
+    else:
+        paginator = Paginator(all_devices, 10)
+        page_number = request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
+        devices = page_obj
 
     context = {
-        'devices': all_devices,
-        'test_message_from_view': test_message,
+        "devices": devices,
+        "page_obj": page_obj,
+        "show_all": show_all,
     }
-    return render(request, 'core/device_list.html', context)
+    return render(request, "core/device_list.html", context)
 
 @login_required
 def device_add(request):
@@ -78,21 +86,6 @@ def device_stats(request):
 def device_stats_page(request):
     return render(request, 'core/device_stats.html')
 
-@login_required
-def device_list(request):
-    devices = Device.objects.all()
-    return render(request, 'core/device_list.html', {'devices': devices})
-
-@login_required
-def device_add(request):
-    if request.method == 'POST':
-        form = DeviceForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('device_list')
-    else:
-        form = DeviceForm()
-    return render(request, 'core/device_form.html', {'form': form})
 
 @login_required
 def device_edit(request, pk):

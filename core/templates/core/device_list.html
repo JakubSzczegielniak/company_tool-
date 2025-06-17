@@ -1,14 +1,13 @@
 {% extends "core/base.html" %}
 
 {% block content %}
-    <div class="alert alert-info" role="alert">
-<pre>test_message_from_view = {{ test_message_from_view|default:"(brak w kontekście)" }}</pre>
-    </div>
-    <div id="MY-MARKER">XYZ</div>
-
-    <a href="{% url 'device_list' %}" class="btn btn-secondary mb-3">Powrót do listy DUPY</a>
     <h2>Lista urządzeń</h2>
     <div class="mb-3">
+        {% if show_all %}
+            <a href="{% url 'device_list' %}" class="btn btn-secondary btn-sm">Włącz paginację</a>
+        {% else %}
+            <a href="?all=1" class="btn btn-secondary btn-sm">Pokaż wszystkie</a>
+        {% endif %}
         <a href="{% url 'device_add' %}" class="btn btn-primary btn-sm ms-2">Dodaj urządzenie</a>
         <a href="{% url 'device_stats_page' %}" class="btn btn-info btn-sm ms-2">Statystyki</a>
     </div>
@@ -37,8 +36,42 @@
                     <a href="{% url 'device_delete' device.pk %}" class="btn btn-sm btn-danger">Usuń</a>
                 </td>
             </tr>
+        {% empty %}
+            <tr><td colspan="6">Brak urządzeń.</td></tr>
         {% endfor %}
         </tbody>
     </table>
+
+    {% if page_obj %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
 
 {% endblock %}
